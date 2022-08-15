@@ -17,5 +17,3 @@ export const BILLING_SETTINGS = {
     // currencyCode: "USD",
     // interval: BillingInterval.OneTime,
 };
-
-export const MONGO_DB_PATH = process.env.MONGO_DB_PATH
