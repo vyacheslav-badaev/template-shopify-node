@@ -1,9 +1,9 @@
-import { useAuthenticatedFetch } from "./useAuthenticatedFetch";
-import { useMemo } from "react";
-import { useQuery } from "react-query";
+import {useAuthenticatedFetch} from "./useAuthenticatedFetch";
+import {useMemo} from "react";
+import {useQuery} from "react-query";
 
 /**
- * A hook for querying your custom app data.
+ * A hook for querying your custom handlers data.
  * @desc A thin wrapper around useAuthenticatedFetch and react-query's useQuery.
  *
  * @param {Object} options - The options for your query. Accepts 3 keys:
@@ -14,17 +14,17 @@ import { useQuery } from "react-query";
  *
  * @returns Return value of useQuery.  See: https://react-query.tanstack.com/reference/useQuery.
  */
-export const useAppQuery = ({ url, fetchInit = {}, reactQueryOptions }) => {
-  const authenticatedFetch = useAuthenticatedFetch();
-  const fetch = useMemo(() => {
-    return async () => {
-      const response = await authenticatedFetch(url, fetchInit);
-      return response.json();
-    };
-  }, [url, JSON.stringify(fetchInit)]);
+export const useAppQuery = ({url, fetchInit = {}, reactQueryOptions}) => {
+    const authenticatedFetch = useAuthenticatedFetch();
+    const fetch = useMemo(() => {
+        return async () => {
+            const response = await authenticatedFetch(url, fetchInit);
+            return response.json();
+        };
+    }, [url, JSON.stringify(fetchInit)]);
 
-  return useQuery(url, fetch, {
-    ...reactQueryOptions,
-    refetchOnWindowFocus: false,
-  });
+    return useQuery(url, fetch, {
+        ...reactQueryOptions,
+        refetchOnWindowFocus: false,
+    });
 };

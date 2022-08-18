@@ -63,7 +63,7 @@ export function setupGDPRWebHooks(path) {
     });
 
     /**
-     * 48 hours after a store owner uninstalls your app, Shopify invokes this
+     * 48 hours after a store owner uninstalls your handlers, Shopify invokes this
      * webhook.
      *
      * https://shopify.dev/apps/webhooks/configuration/mandatory-webhooks#shop-redact

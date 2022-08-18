@@ -37,18 +37,35 @@ export default function applyAuthMiddleware(
 
             const host = req.query.host;
             const {body: {data: {shop}}} = await fetchShopInfo(session);
-            console.log('New Shop Installed', shop);
-            await prisma.shop.create({
-                data: {
-                    name: shop.name,
+
+            const existedShop = await prisma.shop.findFirst({
+                where: {
                     myshopifyDomain: shop.myshopifyDomain,
-                    email: shop.email,
-                    primaryDomain: shop?.primaryDomain?.host || null,
-                    plan: shop.plan.displayName,
-                    token: session.accessToken,
-                    active: true
                 }
-            })
+            });
+
+            const shopData = {
+                name: shop.name,
+                myshopifyDomain: shop.myshopifyDomain,
+                email: shop.email,
+                primaryDomain: shop?.primaryDomain?.host || null,
+                plan: shop.plan.displayName,
+                token: session.accessToken,
+                active: true
+            }
+            if (!existedShop) {
+                await prisma.shop.create({
+                    data: shopData
+                })
+            }
+
+            if (existedShop) {
+                await prisma.shop.update({
+                    where: {myshopifyDomain: shop.myshopifyDomain,},
+                    data: shopData,
+                })
+            }
+
 
             const responses = await Shopify.Webhooks.Registry.registerAll({
                 shop: session.shop,
@@ -79,7 +96,7 @@ export default function applyAuthMiddleware(
                 }
             }
 
-            // Redirect to app with shop parameter upon auth
+            // Redirect to handlers with shop parameter upon auth
             res.redirect(redirectUrl);
         } catch (e) {
             console.warn(e);
@@ -135,7 +152,7 @@ export default function applyAuthMiddleware(
             topLevelAuthRedirect({
                 apiKey: Shopify.Context.API_KEY,
                 hostName: Shopify.Context.HOST_NAME,
-                shop: req.query.shop,
+                shop: req.query.shop
             })
         );
     });

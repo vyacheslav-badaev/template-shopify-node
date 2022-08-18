@@ -1,5 +1,5 @@
-export default function topLevelAuthRedirect({ apiKey, hostName, shop }) {
-  return `<!DOCTYPE html>
+export default function topLevelAuthRedirect({apiKey, hostName, shop}) {
+    return `<!DOCTYPE html>
 <html>
   <head>
     <script src="https://unpkg.com/@shopify/app-bridge@3.1.0"></script>
@@ -7,10 +7,10 @@ export default function topLevelAuthRedirect({ apiKey, hostName, shop }) {
 
     <script>
       document.addEventListener('DOMContentLoaded', function () {
-        var appBridgeUtils = window['app-bridge-utils'];
+        var appBridgeUtils = window['handlers-bridge-utils'];
 
-        if (appBridgeUtils.isShopifyEmbedded()) {
-          var AppBridge = window['app-bridge'];
+        if (appBridgeUtils?.isShopifyEmbedded()) {
+          var AppBridge = window['handlers-bridge'];
           var createApp = AppBridge.default;
           var Redirect = AppBridge.actions.Redirect;
 

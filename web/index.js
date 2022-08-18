@@ -1,29 +1,26 @@
 // @ts-check
 import 'dotenv/config';
-import {join} from "path";
 import fs from "fs";
 import express from "express";
 import cookieParser from "cookie-parser";
 import {Shopify, ApiVersion} from "@shopify/shopify-api";
 import applyAuthMiddleware from "./middleware/auth.js";
 import verifyRequest from "./middleware/verify-request.js";
-import {setupGDPRWebHooks} from "./gdpr.js";
+import {setupGDPRWebHooks} from "./webhooks/gdpr.js";
 import {
-    USE_ONLINE_TOKENS,
     TOP_LEVEL_OAUTH_COOKIE,
     PORT,
     isTest,
-    DEV_INDEX_PATH,
     DB_PATH, BILLING_SETTINGS, PROD_INDEX_PATH
 } from './config/constants.js'
-import prisma from "./config/db-client.js";
+import {setupAppWebHooks} from "./webhooks/apps.js";
+import {handleFrontend} from "./controlles/frontend.js";
 
 const versionFilePath = "./version.txt";
 let templateVersion = "unknown";
 if (fs.existsSync(versionFilePath)) {
     templateVersion = fs.readFileSync(versionFilePath, "utf8").trim();
 }
-
 
 Shopify.Context.initialize({
     API_KEY: process.env.SHOPIFY_API_KEY,
@@ -38,16 +35,9 @@ Shopify.Context.initialize({
     USER_AGENT_PREFIX: `Node App Template/${templateVersion}`,
 });
 
-
-// This sets up the mandatory GDPR webhooks. You’ll need to fill in the endpoint
-// in the “GDPR mandatory webhooks” section in the “App setup” tab, and customize
-// the code when you store customer data.
-//
-// More details can be found on shopify.dev:
-// https://shopify.dev/apps/webhooks/configuration/mandatory-webhooks
 setupGDPRWebHooks("/api/webhooks");
+setupAppWebHooks("/api/webhooks");
 
-// export for test use only
 export async function createServer(
     root = process.cwd(),
     isProd = process.env.NODE_ENV === "production",
@@ -126,32 +116,7 @@ export async function createServer(
         app.use(serveStatic(PROD_INDEX_PATH, {index: false}));
     }
 
-    app.use("/*", async (req, res, next) => {
-        const shop = req.query.shop;
-        // Detect whether we need to reinstall the app, any request from Shopify will
-        // include a shop in the query parameters.
-        const activeShop =
-            await prisma.shop.findFirst({
-                where: {
-                    myshopifyDomain: shop,
-                    active: true
-                }
-            })
-        if (!activeShop) {
-            res.redirect(`/api/install?shop=${shop}`);
-        } else {
-            // res.set('X-Shopify-App-Nothing-To-See-Here', '1');
-            const fs = await import("fs");
-            const fallbackFile = join(
-                isProd ? PROD_INDEX_PATH : DEV_INDEX_PATH,
-                "index.html"
-            );
-            res
-                .status(200)
-                .set("Content-Type", "text/html")
-                .send(fs.readFileSync(fallbackFile));
-        }
-    });
+    app.use("/*", handleFrontend);
 
     return {app};
 }
