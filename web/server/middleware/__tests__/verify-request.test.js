@@ -3,7 +3,7 @@ import express from "express";
 import request from "supertest";
 import {describe, expect, test, vi} from "vitest";
 import jwt from "jsonwebtoken";
-import {serve} from "../../__tests__/serve";
+import {serve} from "../../../__tests__/serve";
 
 import verifyRequest from "../verify-request.js";
 

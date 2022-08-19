@@ -1,26 +1,21 @@
 // @ts-check
 import 'dotenv/config';
-import fs from "fs";
 import express from "express";
 import cookieParser from "cookie-parser";
 import {Shopify, ApiVersion} from "@shopify/shopify-api";
-import applyAuthMiddleware from "./middleware/auth.js";
-import verifyRequest from "./middleware/verify-request.js";
-import {setupGDPRWebHooks} from "./webhooks/gdpr.js";
+import applyAuthMiddleware from "./server/middleware/auth.js";
+import verifyRequest from "./server/middleware/verify-request.js";
 import {
     TOP_LEVEL_OAUTH_COOKIE,
     PORT,
     isTest,
     DB_PATH, BILLING_SETTINGS, PROD_INDEX_PATH
-} from './config/constants.js'
-import {setupAppWebHooks} from "./webhooks/apps.js";
-import {handleFrontend} from "./controlles/frontend.js";
+} from './server/config/constants.js'
+import {setupAppWebHooks} from "./server/webhooks/apps.js";
+import {handleFrontend} from "./server/controlles/frontend.js";
+import {getCurrentVersionApp} from "./server/helpers/utils.js";
 
 const versionFilePath = "./version.txt";
-let templateVersion = "unknown";
-if (fs.existsSync(versionFilePath)) {
-    templateVersion = fs.readFileSync(versionFilePath, "utf8").trim();
-}
 
 Shopify.Context.initialize({
     API_KEY: process.env.SHOPIFY_API_KEY,
@@ -30,12 +25,10 @@ Shopify.Context.initialize({
     HOST_SCHEME: process.env.HOST.split("://")[0],
     API_VERSION: ApiVersion.April22,
     IS_EMBEDDED_APP: true,
-    // This should be replaced with your preferred storage strategy
     SESSION_STORAGE: new Shopify.Session.SQLiteSessionStorage(DB_PATH),
-    USER_AGENT_PREFIX: `Node App Template/${templateVersion}`,
+    USER_AGENT_PREFIX: `App Version/${getCurrentVersionApp(versionFilePath)}`,
 });
 
-setupGDPRWebHooks("/api/webhooks");
 setupAppWebHooks("/api/webhooks");
 
 export async function createServer(

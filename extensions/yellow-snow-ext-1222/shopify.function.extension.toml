@@ -1,7 +1,0 @@
-name = "yellow-snow-ext-1222"
-type = "product_discounts"
-api_version = "2022-07"
-
-[build]
-command = "cargo wasi build --release"
-path = "target/wasm32-wasi/release/yellow-snow-ext-1222.wasm"
